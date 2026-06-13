@@ -1,175 +1,58 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Response Review Studio</title>
+<script>
+  function scoreResponse(text, prompt) {
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    const lengthScore = Math.min(words.length / 2, 10); // caps at 10
 
-  <style>
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(circle at top, #0b1220, #070b14);
-      color: #e5e7eb;
-      margin: 0;
-      padding: 0;
-    }
+    // keyword overlap with prompt
+    const promptWords = prompt.toLowerCase().split(/\s+/);
+    const textLower = text.toLowerCase();
 
-    .container {
-      max-width: 920px;
-      margin: auto;
-      padding: 40px 20px;
-    }
-
-    h1 {
-      font-size: 32px;
-      letter-spacing: -0.5px;
-      margin-bottom: 6px;
-      color: #38bdf8;
-    }
-
-    .subtitle {
-      color: #94a3b8;
-      margin-bottom: 30px;
-    }
-
-    .card {
-      background: rgba(17, 24, 39, 0.85);
-      border: 1px solid rgba(148, 163, 184, 0.15);
-      border-radius: 16px;
-      padding: 18px;
-      margin-bottom: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-      backdrop-filter: blur(10px);
-    }
-
-    .card h3 {
-      margin: 0 0 10px 0;
-      font-size: 15px;
-      color: #cbd5e1;
-    }
-
-    textarea {
-      width: 100%;
-      height: 120px;
-      border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      padding: 12px;
-      font-size: 14px;
-      background: #0f172a;
-      color: white;
-      outline: none;
-      resize: vertical;
-    }
-
-    textarea:focus {
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
-    }
-
-    button {
-      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-      border: none;
-      padding: 12px 18px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-weight: 600;
-      color: #0b1220;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      margin-top: 10px;
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 20px rgba(56, 189, 248, 0.2);
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
-    .results {
-      margin-top: 22px;
-      background: rgba(17, 24, 39, 0.9);
-      border-radius: 16px;
-      padding: 18px;
-      border: 1px solid rgba(148, 163, 184, 0.15);
-    }
-
-    .results h3 {
-      margin-top: 0;
-      color: #38bdf8;
-    }
-
-    #winner {
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    #summary {
-      color: #94a3b8;
-      line-height: 1.5;
-    }
-  </style>
-</head>
-
-<body>
-  <div class="container">
-
-    <h1>🤖 AI Response Review Studio</h1>
-    <div class="subtitle">Evaluate and compare AI-generated responses</div>
-
-    <div class="card">
-      <h3>Prompt</h3>
-      <textarea id="prompt"></textarea>
-    </div>
-
-    <div class="card">
-      <h3>Response A</h3>
-      <textarea id="responseA"></textarea>
-    </div>
-
-    <div class="card">
-      <h3>Response B</h3>
-      <textarea id="responseB"></textarea>
-    </div>
-
-    <button onclick="evaluate()">Evaluate Responses</button>
-
-    <div class="results" id="results" style="display:none;">
-      <h3>Results</h3>
-      <p id="winner"></p>
-      <p id="summary"></p>
-    </div>
-
-  </div>
-
-  <script>
-    function evaluate() {
-      const a = document.getElementById("responseA").value;
-      const b = document.getElementById("responseB").value;
-
-      let scoreA = a.length + Math.random() * 10;
-      let scoreB = b.length + Math.random() * 10;
-
-      let winner = "";
-      let summary = "";
-
-      if (scoreA > scoreB) {
-        winner = "Response A performs better overall.";
-        summary = "A appears clearer and more structured in this evaluation.";
-      } else if (scoreB > scoreA) {
-        winner = "Response B performs better overall.";
-        summary = "B appears more detailed and informative in this evaluation.";
-      } else {
-        winner = "Both responses are evenly matched.";
-        summary = "No strong difference detected in this evaluation.";
+    let matchCount = 0;
+    promptWords.forEach(word => {
+      if (word.length > 3 && textLower.includes(word)) {
+        matchCount++;
       }
+    });
 
-      document.getElementById("results").style.display = "block";
-      document.getElementById("winner").innerText = winner;
-      document.getElementById("summary").innerText = summary;
+    const relevanceScore = Math.min(matchCount * 2, 10);
+
+    // structure bonus (simple heuristic)
+    const hasStructure =
+      text.includes(".") ||
+      text.includes(",") ||
+      text.includes("•") ||
+      text.includes("-");
+
+    const structureScore = hasStructure ? 7 : 4;
+
+    // final weighted score
+    return (lengthScore * 0.3) + (relevanceScore * 0.4) + (structureScore * 0.3);
+  }
+
+  function evaluate() {
+    const prompt = document.getElementById("prompt").value || "";
+    const a = document.getElementById("responseA").value || "";
+    const b = document.getElementById("responseB").value || "";
+
+    const scoreA = scoreResponse(a, prompt);
+    const scoreB = scoreResponse(b, prompt);
+
+    let winner = "";
+    let summary = "";
+
+    if (scoreA > scoreB) {
+      winner = `Response A wins (${scoreA.toFixed(1)} vs ${scoreB.toFixed(1)})`;
+      summary = "Response A scored higher based on relevance, structure, and completeness.";
+    } else if (scoreB > scoreA) {
+      winner = `Response B wins (${scoreB.toFixed(1)} vs ${scoreA.toFixed(1)})`;
+      summary = "Response B scored higher based on relevance, structure, and completeness.";
+    } else {
+      winner = "It's a tie";
+      summary = "Both responses performed similarly across evaluation metrics.";
     }
-  </script>
 
-</body>
-</html>
+    document.getElementById("results").style.display = "block";
+    document.getElementById("winner").innerText = winner;
+    document.getElementById("summary").innerText = summary;
+  }
+</script>
