@@ -16,28 +16,28 @@
     /* HERO */
     .hero {
       text-align: center;
-      padding: 80px 20px 40px;
+      padding: 70px 20px 30px;
     }
 
     .hero h1 {
-      font-size: 40px;
+      font-size: 42px;
       margin-bottom: 10px;
       color: #38bdf8;
     }
 
     .hero p {
-      color: #94a3b8;
-      max-width: 600px;
+      max-width: 650px;
       margin: auto;
+      color: #94a3b8;
       line-height: 1.6;
     }
 
     .cta {
-      margin-top: 20px;
+      margin-top: 18px;
       padding: 12px 18px;
-      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
       border: none;
       border-radius: 12px;
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
       font-weight: 700;
       cursor: pointer;
       color: #0b1220;
@@ -62,10 +62,10 @@
 
     .feature h3 {
       color: #38bdf8;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
-    /* APP SECTION */
+    /* APP */
     .app {
       max-width: 920px;
       margin: auto;
@@ -88,6 +88,7 @@
       padding: 12px;
       background: #0f172a;
       color: white;
+      resize: vertical;
     }
 
     button.main {
@@ -100,6 +101,7 @@
       margin-top: 10px;
     }
 
+    /* RESULTS */
     .results {
       margin-top: 20px;
     }
@@ -118,6 +120,7 @@
       background: #1f2937;
       border-radius: 999px;
       overflow: hidden;
+      margin-top: 6px;
     }
 
     .bar-fill {
@@ -125,6 +128,24 @@
       width: 0%;
       background: linear-gradient(90deg, #38bdf8, #0ea5e9);
       transition: width 0.5s ease;
+    }
+
+    .score-text {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .label {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    .value {
+      font-size: 16px;
+      font-weight: 600;
     }
   </style>
 </head>
@@ -135,7 +156,7 @@
   <div class="hero">
     <h1>🤖 AI Evaluation Studio</h1>
     <p>
-      A lightweight tool for comparing AI-generated responses using structured scoring for relevance, clarity, and completeness.
+      Compare AI-generated responses using structured scoring for relevance, clarity, and formatting quality.
     </p>
     <button class="cta" onclick="document.getElementById('app').scrollIntoView({behavior:'smooth'})">
       Start Evaluating
@@ -145,16 +166,16 @@
   <!-- FEATURES -->
   <div class="features">
     <div class="feature">
-      <h3>Score AI Responses</h3>
-      <p>Automatically evaluate responses based on structured metrics.</p>
+      <h3>Multi-Metric Scoring</h3>
+      <p>Evaluates relevance, clarity, and structure.</p>
     </div>
     <div class="feature">
-      <h3>Compare Outputs</h3>
-      <p>Side-by-side analysis of two AI responses.</p>
+      <h3>Side-by-Side Comparison</h3>
+      <p>Compare two AI responses instantly.</p>
     </div>
     <div class="feature">
-      <h3>Visual Feedback</h3>
-      <p>Clear score breakdowns with progress bars.</p>
+      <h3>Visual Score Dashboard</h3>
+      <p>Progress bars and structured evaluation output.</p>
     </div>
   </div>
 
@@ -181,23 +202,25 @@
     <div class="results">
 
       <div class="result-card">
-        <h3>Winner</h3>
-        <p id="winner">—</p>
+        <div class="label">Winner</div>
+        <div class="value" id="winner">—</div>
       </div>
 
       <div class="result-card">
-        <h3>Analysis</h3>
-        <p id="summary">—</p>
+        <div class="label">Analysis</div>
+        <div class="value" id="summary">—</div>
       </div>
 
       <div class="result-card">
-        <h3>Response A Score</h3>
+        <div class="label">Response A Score Breakdown</div>
         <div class="bar-bg"><div class="bar-fill" id="barA"></div></div>
+        <div class="score-text" id="scoreA">—</div>
       </div>
 
       <div class="result-card">
-        <h3>Response B Score</h3>
+        <div class="label">Response B Score Breakdown</div>
         <div class="bar-bg"><div class="bar-fill" id="barB"></div></div>
+        <div class="score-text" id="scoreB">—</div>
       </div>
 
     </div>
@@ -205,9 +228,10 @@
   </div>
 
   <script>
-    function score(text, prompt) {
+    function scoreDetails(text, prompt) {
       const words = text.trim().split(/\s+/).filter(Boolean);
-      const length = Math.min(words.length / 2, 10);
+
+      const lengthScore = Math.min(words.length / 2, 10);
 
       const pWords = prompt.toLowerCase().split(/\s+/);
       const t = text.toLowerCase();
@@ -217,14 +241,19 @@
         if (w.length > 3 && t.includes(w)) match++;
       });
 
-      const relevance = Math.min(match * 2, 10);
+      const relevanceScore = Math.min(match * 2, 10);
 
       const structure =
-        text.includes(".") || text.includes(",") || text.includes("-")
+        text.includes(".") || text.includes(",") || text.includes("-") || text.includes("•")
           ? 7
           : 4;
 
-      return (length * 0.3) + (relevance * 0.4) + (structure * 0.3);
+      const total =
+        (lengthScore * 0.3) +
+        (relevanceScore * 0.4) +
+        (structure * 0.3);
+
+      return { lengthScore, relevanceScore, structure, total };
     }
 
     function setBar(id, value) {
@@ -236,17 +265,25 @@
       const a = document.getElementById("responseA").value || "";
       const b = document.getElementById("responseB").value || "";
 
-      const sA = score(a, prompt);
-      const sB = score(b, prompt);
+      const A = scoreDetails(a, prompt);
+      const B = scoreDetails(b, prompt);
 
       document.getElementById("winner").innerText =
-        sA > sB ? "Response A Wins" : sB > sA ? "Response B Wins" : "Tie";
+        A.total > B.total ? "Response A Wins 🥇"
+        : B.total > A.total ? "Response B Wins 🥇"
+        : "Tie 🤝";
 
       document.getElementById("summary").innerText =
-        "Evaluation completed using relevance, structure, and clarity scoring.";
+        "Evaluation based on relevance, clarity, and structure scoring.";
 
-      setBar("barA", sA);
-      setBar("barB", sB);
+      setBar("barA", A.total);
+      setBar("barB", B.total);
+
+      document.getElementById("scoreA").innerText =
+        `Relevance: ${A.relevanceScore.toFixed(1)} | Clarity: ${A.lengthScore.toFixed(1)} | Structure: ${A.structure.toFixed(1)} | Total: ${A.total.toFixed(1)}`;
+
+      document.getElementById("scoreB").innerText =
+        `Relevance: ${B.relevanceScore.toFixed(1)} | Clarity: ${B.lengthScore.toFixed(1)} | Structure: ${B.structure.toFixed(1)} | Total: ${B.total.toFixed(1)}`;
     }
   </script>
 
