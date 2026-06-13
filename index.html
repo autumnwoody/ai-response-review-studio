@@ -183,50 +183,62 @@
 
   <script>
     function score(text, prompt) {
-      const words = text.trim().split(/\s+/).filter(Boolean);
-      const length = Math.min(words.length / 2, 10);
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  const length = Math.min(words.length / 2, 10);
 
-      const pWords = prompt.toLowerCase().split(/\s+/);
-      const t = text.toLowerCase();
+  const pWords = prompt.toLowerCase().split(/\s+/);
+  const t = text.toLowerCase();
 
-      let match = 0;
-      pWords.forEach(w => {
-        if (w.length > 3 && t.includes(w)) match++;
-      });
+  let match = 0;
+  pWords.forEach(w => {
+    if (w.length > 3 && t.includes(w)) match++;
+  });
 
-      const relevance = Math.min(match * 2, 10);
+  const relevance = Math.min(match * 2, 10);
 
-      const structure =
-        text.includes(".") || text.includes(",") || text.includes("-")
-          ? 7
-          : 4;
+  const structure =
+    text.includes(".") ||
+    text.includes(",") ||
+    text.includes("-")
+      ? 7
+      : 4;
 
-      return (length * 0.3) + (relevance * 0.4) + (structure * 0.3);
-    }
+  return (length * 0.3) + (relevance * 0.4) + (structure * 0.3);
+}
 
-    function setBar(id, value) {
-      document.getElementById(id).style.width = (value / 10) * 100 + "%";
-    }
+function setBar(id, value) {
+  document.getElementById(id).style.width = (value / 10) * 100 + "%";
+}
 
-    function evaluate() {
-      const prompt = document.getElementById("prompt").value || "";
-      const a = document.getElementById("responseA").value || "";
-      const b = document.getElementById("responseB").value || "";
+function evaluate() {
+  const btn = document.querySelector("button.main");
 
-      const A = score(a, prompt);
-      const B = score(b, prompt);
+  btn.disabled = true;
+  btn.innerText = "Evaluating...";
 
-      document.getElementById("winner").innerText =
-        A > B ? "Response A Wins 🥇"
-        : B > A ? "Response B Wins 🥇"
-        : "Tie 🤝";
+  setTimeout(() => {
+    const prompt = document.getElementById("prompt").value || "";
+    const a = document.getElementById("responseA").value || "";
+    const b = document.getElementById("responseB").value || "";
 
-      document.getElementById("summary").innerText =
-        "Evaluation based on relevance, clarity, and structure.";
+    const A = score(a, prompt);
+    const B = score(b, prompt);
 
-      setBar("barA", A);
-      setBar("barB", B);
-    }
+    document.getElementById("winner").innerText =
+      A > B ? "Response A Wins 🥇"
+      : B > A ? "Response B Wins 🥇"
+      : "Tie 🤝";
+
+    document.getElementById("summary").innerText =
+      "Evaluation based on relevance, clarity, and structure scoring.";
+
+    setBar("barA", A);
+    setBar("barB", B);
+
+    btn.disabled = false;
+    btn.innerText = "Run Evaluation";
+  }, 600);
+}
   </script>
 
 </body>
