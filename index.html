@@ -109,6 +109,20 @@
       background: linear-gradient(90deg, #38bdf8, #0ea5e9);
       transition: width 0.5s ease;
     }
+    .result-card {
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
   </style>
 </head>
 
