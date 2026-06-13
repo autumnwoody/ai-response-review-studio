@@ -3,32 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Response Review Studio</title>
+  <title>AI Evaluation Studio</title>
 
   <style>
     body {
+      margin: 0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background: radial-gradient(circle at top, #0b1220, #070b14);
       color: #e5e7eb;
-      margin: 0;
-      padding: 0;
+    }
+
+    /* NAV BAR */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      background: rgba(17, 24, 39, 0.7);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+    }
+
+    .nav-title {
+      font-weight: 700;
+      color: #38bdf8;
+    }
+
+    .nav button {
+      background: #38bdf8;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
     }
 
     .container {
       max-width: 920px;
       margin: auto;
-      padding: 40px 20px;
-    }
-
-    h1 {
-      font-size: 32px;
-      margin-bottom: 6px;
-      color: #38bdf8;
+      padding: 30px 20px;
     }
 
     .subtitle {
       color: #94a3b8;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
 
     .card {
@@ -37,14 +57,7 @@
       border-radius: 16px;
       padding: 16px;
       margin-bottom: 14px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
       backdrop-filter: blur(10px);
-    }
-
-    h3 {
-      margin: 0 0 8px 0;
-      font-size: 14px;
-      color: #cbd5e1;
     }
 
     textarea {
@@ -56,32 +69,23 @@
       font-size: 14px;
       background: #0f172a;
       color: white;
-      outline: none;
       resize: vertical;
     }
 
-    textarea:focus {
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
-    }
-
-    button {
+    button.main {
       background: linear-gradient(135deg, #38bdf8, #0ea5e9);
       border: none;
       padding: 12px 18px;
       border-radius: 12px;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 700;
       color: #0b1220;
       margin-top: 10px;
     }
 
-    button:hover {
-      transform: translateY(-1px);
-    }
-
+    /* RESULTS */
     .results {
-      margin-top: 22px;
+      margin-top: 25px;
     }
 
     .result-card {
@@ -101,15 +105,45 @@
     .value {
       font-size: 16px;
       font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    /* SCORE BAR */
+    .bar-bg {
+      width: 100%;
+      height: 10px;
+      background: #1f2937;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 10px;
+      background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .score-text {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 6px;
     }
   </style>
 </head>
 
 <body>
+
+  <div class="nav">
+    <div class="nav-title">🤖 AI Evaluation Studio</div>
+    <button onclick="location.reload()">New Evaluation</button>
+  </div>
+
   <div class="container">
 
-    <h1>🤖 AI Response Review Studio</h1>
-    <div class="subtitle">Evaluate and compare AI-generated responses</div>
+    <div class="subtitle">
+      Compare AI responses using structured evaluation scoring
+    </div>
 
     <div class="card">
       <h3>Prompt</h3>
@@ -126,7 +160,7 @@
       <textarea id="responseB"></textarea>
     </div>
 
-    <button onclick="evaluate()">Evaluate Responses</button>
+    <button class="main" onclick="evaluate()">Run Evaluation</button>
 
     <div class="results">
 
@@ -141,8 +175,15 @@
       </div>
 
       <div class="result-card">
-        <div class="label">Score Breakdown</div>
-        <div class="value" id="scores">A: — | B: —</div>
+        <div class="label">Response A Score</div>
+        <div class="bar-bg"><div class="bar-fill" id="barA"></div></div>
+        <div class="score-text" id="scoreA">0 / 10</div>
+      </div>
+
+      <div class="result-card">
+        <div class="label">Response B Score</div>
+        <div class="bar-bg"><div class="bar-fill" id="barB"></div></div>
+        <div class="score-text" id="scoreB">0 / 10</div>
       </div>
 
     </div>
@@ -150,31 +191,31 @@
   </div>
 
   <script>
-    function scoreResponse(text, prompt) {
+    function score(text, prompt) {
       const words = text.trim().split(/\s+/).filter(Boolean);
-      const lengthScore = Math.min(words.length / 2, 10);
+      const length = Math.min(words.length / 2, 10);
 
-      const promptWords = prompt.toLowerCase().split(/\s+/);
-      const textLower = text.toLowerCase();
+      const pWords = prompt.toLowerCase().split(/\s+/);
+      const t = text.toLowerCase();
 
-      let matchCount = 0;
-      promptWords.forEach(word => {
-        if (word.length > 3 && textLower.includes(word)) {
-          matchCount++;
-        }
+      let match = 0;
+      pWords.forEach(w => {
+        if (w.length > 3 && t.includes(w)) match++;
       });
 
-      const relevanceScore = Math.min(matchCount * 2, 10);
+      const relevance = Math.min(match * 2, 10);
 
-      const hasStructure =
-        text.includes(".") ||
-        text.includes(",") ||
-        text.includes("-") ||
-        text.includes("•");
+      const structure =
+        text.includes(".") || text.includes("-") || text.includes(",")
+          ? 7
+          : 4;
 
-      const structureScore = hasStructure ? 7 : 4;
+      return (length * 0.3) + (relevance * 0.4) + (structure * 0.3);
+    }
 
-      return (lengthScore * 0.3) + (relevanceScore * 0.4) + (structureScore * 0.3);
+    function setBar(id, value) {
+      const percent = (value / 10) * 100;
+      document.getElementById(id).style.width = percent + "%";
     }
 
     function evaluate() {
@@ -182,18 +223,18 @@
       const a = document.getElementById("responseA").value || "";
       const b = document.getElementById("responseB").value || "";
 
-      const scoreA = scoreResponse(a, prompt);
-      const scoreB = scoreResponse(b, prompt);
+      const sA = score(a, prompt);
+      const sB = score(b, prompt);
 
       let winner = "";
       let summary = "";
 
-      if (scoreA > scoreB) {
-        winner = "Response A";
-        summary = "A performed better due to stronger relevance and structure.";
-      } else if (scoreB > scoreA) {
-        winner = "Response B";
-        summary = "B performed better due to higher clarity and completeness.";
+      if (sA > sB) {
+        winner = "Response A Wins";
+        summary = "A performed better based on relevance and structure.";
+      } else if (sB > sA) {
+        winner = "Response B Wins";
+        summary = "B performed better based on clarity and completeness.";
       } else {
         winner = "Tie";
         summary = "Both responses are evenly matched.";
@@ -201,8 +242,12 @@
 
       document.getElementById("winner").innerText = winner;
       document.getElementById("summary").innerText = summary;
-      document.getElementById("scores").innerText =
-        `A: ${scoreA.toFixed(1)} | B: ${scoreB.toFixed(1)}`;
+
+      document.getElementById("scoreA").innerText = sA.toFixed(1) + " / 10";
+      document.getElementById("scoreB").innerText = sB.toFixed(1) + " / 10";
+
+      setBar("barA", sA);
+      setBar("barB", sB);
     }
   </script>
 
