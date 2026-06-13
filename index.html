@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Response Review Studio</title>
+  <title>AI Evaluation Studio</title>
 
   <style>
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background: radial-gradient(circle at top, #0b1220, #070b14);
       color: #e5e7eb;
     }
@@ -19,22 +19,33 @@
     }
 
     .hero h1 {
-      font-size: 40px;
-      color: #38bdf8;
+      font-size: 42px;
       margin-bottom: 10px;
+      color: #38bdf8;
     }
 
     .hero p {
       max-width: 650px;
       margin: auto;
       color: #94a3b8;
-      line-height: 1.5;
+      line-height: 1.6;
+    }
+
+    .cta {
+      margin-top: 18px;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      font-weight: 700;
+      cursor: pointer;
+      color: #0b1220;
     }
 
     .app {
-      max-width: 900px;
+      max-width: 920px;
       margin: auto;
-      padding: 30px 20px 80px;
+      padding: 40px 20px;
     }
 
     .card {
@@ -53,22 +64,26 @@
       padding: 12px;
       background: #0f172a;
       color: white;
-      resize: vertical;
     }
 
-    button {
+    button.main {
       background: linear-gradient(135deg, #38bdf8, #0ea5e9);
       border: none;
       padding: 12px 18px;
       border-radius: 12px;
       font-weight: 800;
       cursor: pointer;
-      color: #0b1220;
       margin-top: 10px;
+      color: #0b1220;
+      transition: 0.2s;
     }
 
-    button:hover {
+    button.main:hover {
       transform: translateY(-1px);
+    }
+
+    .results {
+      margin-top: 20px;
     }
 
     .result-card {
@@ -76,7 +91,7 @@
       border: 1px solid rgba(148, 163, 184, 0.15);
       border-radius: 16px;
       padding: 16px;
-      margin-top: 12px;
+      margin-bottom: 12px;
     }
 
     .bar-bg {
@@ -100,11 +115,14 @@
 <body>
 
   <div class="hero">
-    <h1>🤖 AI Response Review Studio</h1>
-    <p>Compare two AI responses using scoring for relevance, clarity, and structure.</p>
+    <h1>🤖 AI Evaluation Studio</h1>
+    <p>Compare AI-generated responses using structured scoring for relevance, clarity, and structure.</p>
+    <button class="cta" onclick="document.getElementById('app').scrollIntoView({behavior:'smooth'})">
+      Start Evaluating
+    </button>
   </div>
 
-  <div class="app">
+  <div class="app" id="app">
 
     <div class="card">
       <h3>Prompt</h3>
@@ -121,26 +139,30 @@
       <textarea id="responseB"></textarea>
     </div>
 
-    <button onclick="evaluate()">Run Evaluation</button>
+    <button class="main" onclick="evaluate()">Run Evaluation</button>
 
-    <div class="result-card">
-      <h3>Winner</h3>
-      <p id="winner">—</p>
-    </div>
+    <div class="results">
 
-    <div class="result-card">
-      <h3>Summary</h3>
-      <p id="summary">—</p>
-    </div>
+      <div class="result-card">
+        <h3>Winner</h3>
+        <p id="winner">—</p>
+      </div>
 
-    <div class="result-card">
-      <h3>Response A</h3>
-      <div class="bar-bg"><div class="bar-fill" id="barA"></div></div>
-    </div>
+      <div class="result-card">
+        <h3>Analysis</h3>
+        <p id="summary">—</p>
+      </div>
 
-    <div class="result-card">
-      <h3>Response B</h3>
-      <div class="bar-bg"><div class="bar-fill" id="barB"></div></div>
+      <div class="result-card">
+        <h3>Response A Score</h3>
+        <div class="bar-bg"><div class="bar-fill" id="barA"></div></div>
+      </div>
+
+      <div class="result-card">
+        <h3>Response B Score</h3>
+        <div class="bar-bg"><div class="bar-fill" id="barB"></div></div>
+      </div>
+
     </div>
 
   </div>
@@ -161,9 +183,7 @@
       const relevance = Math.min(match * 2, 10);
 
       const structure =
-        text.includes(".") ||
-        text.includes(",") ||
-        text.includes("-")
+        text.includes(".") || text.includes(",") || text.includes("-")
           ? 7
           : 4;
 
