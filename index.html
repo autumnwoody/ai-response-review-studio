@@ -31,6 +31,17 @@
       line-height: 1.6;
     }
 
+    .cta {
+      margin-top: 18px;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      font-weight: 700;
+      cursor: pointer;
+      color: #0b1220;
+    }
+
     .app {
       max-width: 920px;
       margin: auto;
@@ -65,16 +76,6 @@
       cursor: pointer;
       margin-top: 10px;
       color: #0b1220;
-      transition: 0.2s;
-    }
-
-    button.main:hover {
-      transform: translateY(-1px);
-    }
-
-    button.main:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
     }
 
     .results {
@@ -87,8 +88,6 @@
       border-radius: 16px;
       padding: 16px;
       margin-bottom: 12px;
-      opacity: 1;
-      transition: all 0.4s ease;
     }
 
     .bar-bg {
@@ -104,19 +103,25 @@
       height: 10px;
       width: 0%;
       background: linear-gradient(90deg, #38bdf8, #0ea5e9);
-      transition: width 0.6s ease;
+      transition: width 0.5s ease;
     }
   </style>
 </head>
 
 <body>
 
+  <!-- HERO -->
   <div class="hero">
     <h1>🤖 AI Evaluation Studio</h1>
     <p>Compare AI-generated responses using structured scoring for relevance, clarity, and structure.</p>
+
+    <button class="cta" onclick="document.getElementById('app').scrollIntoView({behavior:'smooth'})">
+      Start Evaluating
+    </button>
   </div>
 
-  <div class="app">
+  <!-- APP -->
+  <div class="app" id="app">
 
     <div class="card">
       <h3>Prompt</h3>
@@ -133,7 +138,7 @@
       <textarea id="responseB"></textarea>
     </div>
 
-    <button class="main" id="runBtn" onclick="evaluate()">Run Evaluation</button>
+    <button class="main" onclick="evaluate()">Run Evaluation</button>
 
     <div class="results">
 
@@ -191,37 +196,23 @@
     }
 
     function evaluate() {
-      const btn = document.getElementById("runBtn");
+      const prompt = document.getElementById("prompt").value || "";
+      const a = document.getElementById("responseA").value || "";
+      const b = document.getElementById("responseB").value || "";
 
-      btn.disabled = true;
-      btn.innerText = "Evaluating...";
+      const A = score(a, prompt);
+      const B = score(b, prompt);
 
-      // small delay so UI feels alive
-      setTimeout(() => {
+      document.getElementById("winner").innerText =
+        A > B ? "Response A Wins 🥇"
+        : B > A ? "Response B Wins 🥇"
+        : "Tie 🤝";
 
-        const prompt = document.getElementById("prompt").value || "";
-        const a = document.getElementById("responseA").value || "";
-        const b = document.getElementById("responseB").value || "";
+      document.getElementById("summary").innerText =
+        "Evaluation based on relevance, clarity, and structure.";
 
-        const A = score(a, prompt);
-        const B = score(b, prompt);
-
-        document.getElementById("winner").innerText =
-          A > B ? "Response A Wins 🥇"
-          : B > A ? "Response B Wins 🥇"
-          : "Tie 🤝";
-
-        document.getElementById("summary").innerText =
-          "Evaluation based on relevance, clarity, and structure.";
-
-        setBar("barA", A);
-        setBar("barB", B);
-
-        // reset button
-        btn.disabled = false;
-        btn.innerText = "Run Evaluation";
-
-      }, 500);
+      setBar("barA", A);
+      setBar("barB", B);
     }
   </script>
 
