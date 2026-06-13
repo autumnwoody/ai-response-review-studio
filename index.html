@@ -1,58 +1,210 @@
-<script>
-  function scoreResponse(text, prompt) {
-    const words = text.trim().split(/\s+/).filter(Boolean);
-    const lengthScore = Math.min(words.length / 2, 10); // caps at 10
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Response Review Studio</title>
 
-    // keyword overlap with prompt
-    const promptWords = prompt.toLowerCase().split(/\s+/);
-    const textLower = text.toLowerCase();
-
-    let matchCount = 0;
-    promptWords.forEach(word => {
-      if (word.length > 3 && textLower.includes(word)) {
-        matchCount++;
-      }
-    });
-
-    const relevanceScore = Math.min(matchCount * 2, 10);
-
-    // structure bonus (simple heuristic)
-    const hasStructure =
-      text.includes(".") ||
-      text.includes(",") ||
-      text.includes("•") ||
-      text.includes("-");
-
-    const structureScore = hasStructure ? 7 : 4;
-
-    // final weighted score
-    return (lengthScore * 0.3) + (relevanceScore * 0.4) + (structureScore * 0.3);
-  }
-
-  function evaluate() {
-    const prompt = document.getElementById("prompt").value || "";
-    const a = document.getElementById("responseA").value || "";
-    const b = document.getElementById("responseB").value || "";
-
-    const scoreA = scoreResponse(a, prompt);
-    const scoreB = scoreResponse(b, prompt);
-
-    let winner = "";
-    let summary = "";
-
-    if (scoreA > scoreB) {
-      winner = `Response A wins (${scoreA.toFixed(1)} vs ${scoreB.toFixed(1)})`;
-      summary = "Response A scored higher based on relevance, structure, and completeness.";
-    } else if (scoreB > scoreA) {
-      winner = `Response B wins (${scoreB.toFixed(1)} vs ${scoreA.toFixed(1)})`;
-      summary = "Response B scored higher based on relevance, structure, and completeness.";
-    } else {
-      winner = "It's a tie";
-      summary = "Both responses performed similarly across evaluation metrics.";
+  <style>
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at top, #0b1220, #070b14);
+      color: #e5e7eb;
+      margin: 0;
+      padding: 0;
     }
 
-    document.getElementById("results").style.display = "block";
-    document.getElementById("winner").innerText = winner;
-    document.getElementById("summary").innerText = summary;
-  }
-</script>
+    .container {
+      max-width: 920px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 6px;
+      color: #38bdf8;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      backdrop-filter: blur(10px);
+    }
+
+    h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      padding: 12px;
+      font-size: 14px;
+      background: #0f172a;
+      color: white;
+      outline: none;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+    }
+
+    button {
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      border: none;
+      padding: 12px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #0b1220;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .results {
+      margin-top: 22px;
+    }
+
+    .result-card {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .label {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    .value {
+      font-size: 16px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <h1>🤖 AI Response Review Studio</h1>
+    <div class="subtitle">Evaluate and compare AI-generated responses</div>
+
+    <div class="card">
+      <h3>Prompt</h3>
+      <textarea id="prompt"></textarea>
+    </div>
+
+    <div class="card">
+      <h3>Response A</h3>
+      <textarea id="responseA"></textarea>
+    </div>
+
+    <div class="card">
+      <h3>Response B</h3>
+      <textarea id="responseB"></textarea>
+    </div>
+
+    <button onclick="evaluate()">Evaluate Responses</button>
+
+    <div class="results">
+
+      <div class="result-card">
+        <div class="label">Winner</div>
+        <div class="value" id="winner">—</div>
+      </div>
+
+      <div class="result-card">
+        <div class="label">Analysis</div>
+        <div class="value" id="summary">Run an evaluation to see results</div>
+      </div>
+
+      <div class="result-card">
+        <div class="label">Score Breakdown</div>
+        <div class="value" id="scores">A: — | B: —</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    function scoreResponse(text, prompt) {
+      const words = text.trim().split(/\s+/).filter(Boolean);
+      const lengthScore = Math.min(words.length / 2, 10);
+
+      const promptWords = prompt.toLowerCase().split(/\s+/);
+      const textLower = text.toLowerCase();
+
+      let matchCount = 0;
+      promptWords.forEach(word => {
+        if (word.length > 3 && textLower.includes(word)) {
+          matchCount++;
+        }
+      });
+
+      const relevanceScore = Math.min(matchCount * 2, 10);
+
+      const hasStructure =
+        text.includes(".") ||
+        text.includes(",") ||
+        text.includes("-") ||
+        text.includes("•");
+
+      const structureScore = hasStructure ? 7 : 4;
+
+      return (lengthScore * 0.3) + (relevanceScore * 0.4) + (structureScore * 0.3);
+    }
+
+    function evaluate() {
+      const prompt = document.getElementById("prompt").value || "";
+      const a = document.getElementById("responseA").value || "";
+      const b = document.getElementById("responseB").value || "";
+
+      const scoreA = scoreResponse(a, prompt);
+      const scoreB = scoreResponse(b, prompt);
+
+      let winner = "";
+      let summary = "";
+
+      if (scoreA > scoreB) {
+        winner = "Response A";
+        summary = "A performed better due to stronger relevance and structure.";
+      } else if (scoreB > scoreA) {
+        winner = "Response B";
+        summary = "B performed better due to higher clarity and completeness.";
+      } else {
+        winner = "Tie";
+        summary = "Both responses are evenly matched.";
+      }
+
+      document.getElementById("winner").innerText = winner;
+      document.getElementById("summary").innerText = summary;
+      document.getElementById("scores").innerText =
+        `A: ${scoreA.toFixed(1)} | B: ${scoreB.toFixed(1)}`;
+    }
+  </script>
+
+</body>
+</html>
