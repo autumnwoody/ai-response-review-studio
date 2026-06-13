@@ -1,72 +1,219 @@
-<style>
-button.main {
-  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-  border: none;
-  padding: 12px 18px;
-  border-radius: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  margin-top: 10px;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Evaluation Studio</title>
 
-  /* readability fix */
-  color: #0b1220;
-  letter-spacing: 0.3px;
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at top, #0b1220, #070b14);
+      color: #e5e7eb;
+    }
 
-  /* SaaS look */
-  box-shadow: 0 10px 25px rgba(14, 165, 233, 0.25);
-  transition: all 0.2s ease;
-}
+    .hero {
+      text-align: center;
+      padding: 70px 20px 30px;
+    }
 
-button.main:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(14, 165, 233, 0.35);
-}
+    .hero h1 {
+      font-size: 42px;
+      margin-bottom: 10px;
+      color: #38bdf8;
+    }
 
-button.main:active {
-  transform: translateY(0px);
-}
+    .hero p {
+      max-width: 650px;
+      margin: auto;
+      color: #94a3b8;
+      line-height: 1.6;
+    }
 
-button.main:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-</style>
+    .cta {
+      margin-top: 18px;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      font-weight: 700;
+      cursor: pointer;
+      color: #0b1220;
+    }
 
-<script>
-function evaluate() {
-  const btn = document.querySelector("button.main");
+    .app {
+      max-width: 920px;
+      margin: auto;
+      padding: 40px 20px;
+    }
 
-  btn.disabled = true;
-  btn.innerText = "Evaluating...";
+    .card {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
 
-  setTimeout(() => {
-    const prompt = document.getElementById("prompt").value || "";
-    const a = document.getElementById("responseA").value || "";
-    const b = document.getElementById("responseB").value || "";
+    textarea {
+      width: 100%;
+      height: 120px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      padding: 12px;
+      background: #0f172a;
+      color: white;
+    }
 
-    const A = scoreDetails(a, prompt);
-    const B = scoreDetails(b, prompt);
+    button.main {
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      border: none;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 10px;
+      color: #0b1220;
+      transition: 0.2s;
+    }
 
-    document.getElementById("winner").innerText =
-      A.total > B.total ? "Response A Wins 🥇"
-      : B.total > A.total ? "Response B Wins 🥇"
-      : "Tie 🤝";
+    button.main:hover {
+      transform: translateY(-1px);
+    }
 
-    document.getElementById("summary").innerText =
-      "Evaluation based on relevance, clarity, and structure scoring.";
+    .results {
+      margin-top: 20px;
+    }
 
-    setBar("barA", A.total);
-    setBar("barB", B.total);
+    .result-card {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
 
-    document.getElementById("scoreA").innerText =
-      `Relevance: ${A.relevanceScore.toFixed(1)} | Clarity: ${A.lengthScore.toFixed(1)} | Structure: ${A.structure.toFixed(1)} | Total: ${A.total.toFixed(1)}`;
+    .bar-bg {
+      width: 100%;
+      height: 10px;
+      background: #1f2937;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
 
-    document.getElementById("scoreB").innerText =
-      `Relevance: ${B.relevanceScore.toFixed(1)} | Clarity: ${B.lengthScore.toFixed(1)} | Structure: ${B.structure.toFixed(1)} | Total: ${B.total.toFixed(1)}`;
+    .bar-fill {
+      height: 10px;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+      transition: width 0.5s ease;
+    }
+  </style>
+</head>
 
-    btn.disabled = false;
-    btn.innerText = "Run Evaluation";
-  }, 600);
-}
-</script>
+<body>
+
+  <div class="hero">
+    <h1>🤖 AI Evaluation Studio</h1>
+    <p>Compare AI-generated responses using structured scoring for relevance, clarity, and structure.</p>
+    <button class="cta" onclick="document.getElementById('app').scrollIntoView({behavior:'smooth'})">
+      Start Evaluating
+    </button>
+  </div>
+
+  <div class="app" id="app">
+
+    <div class="card">
+      <h3>Prompt</h3>
+      <textarea id="prompt"></textarea>
+    </div>
+
+    <div class="card">
+      <h3>Response A</h3>
+      <textarea id="responseA"></textarea>
+    </div>
+
+    <div class="card">
+      <h3>Response B</h3>
+      <textarea id="responseB"></textarea>
+    </div>
+
+    <button class="main" onclick="evaluate()">Run Evaluation</button>
+
+    <div class="results">
+
+      <div class="result-card">
+        <h3>Winner</h3>
+        <p id="winner">—</p>
+      </div>
+
+      <div class="result-card">
+        <h3>Analysis</h3>
+        <p id="summary">—</p>
+      </div>
+
+      <div class="result-card">
+        <h3>Response A Score</h3>
+        <div class="bar-bg"><div class="bar-fill" id="barA"></div></div>
+      </div>
+
+      <div class="result-card">
+        <h3>Response B Score</h3>
+        <div class="bar-bg"><div class="bar-fill" id="barB"></div></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    function score(text, prompt) {
+      const words = text.trim().split(/\s+/).filter(Boolean);
+      const length = Math.min(words.length / 2, 10);
+
+      const pWords = prompt.toLowerCase().split(/\s+/);
+      const t = text.toLowerCase();
+
+      let match = 0;
+      pWords.forEach(w => {
+        if (w.length > 3 && t.includes(w)) match++;
+      });
+
+      const relevance = Math.min(match * 2, 10);
+
+      const structure =
+        text.includes(".") || text.includes(",") || text.includes("-")
+          ? 7
+          : 4;
+
+      return (length * 0.3) + (relevance * 0.4) + (structure * 0.3);
+    }
+
+    function setBar(id, value) {
+      document.getElementById(id).style.width = (value / 10) * 100 + "%";
+    }
+
+    function evaluate() {
+      const prompt = document.getElementById("prompt").value || "";
+      const a = document.getElementById("responseA").value || "";
+      const b = document.getElementById("responseB").value || "";
+
+      const A = score(a, prompt);
+      const B = score(b, prompt);
+
+      document.getElementById("winner").innerText =
+        A > B ? "Response A Wins 🥇"
+        : B > A ? "Response B Wins 🥇"
+        : "Tie 🤝";
+
+      document.getElementById("summary").innerText =
+        "Evaluation based on relevance, clarity, and structure.";
+
+      setBar("barA", A);
+      setBar("barB", B);
+    }
+  </script>
+
+</body>
+</html>
