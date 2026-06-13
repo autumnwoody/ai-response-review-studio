@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Evaluation Studio</title>
+  <title>AI Response Review Studio</title>
 
   <style>
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
       background: radial-gradient(circle at top, #0b1220, #070b14);
       color: #e5e7eb;
     }
@@ -19,33 +19,22 @@
     }
 
     .hero h1 {
-      font-size: 42px;
-      margin-bottom: 10px;
+      font-size: 40px;
       color: #38bdf8;
+      margin-bottom: 10px;
     }
 
     .hero p {
       max-width: 650px;
       margin: auto;
       color: #94a3b8;
-      line-height: 1.6;
-    }
-
-    .cta {
-      margin-top: 18px;
-      padding: 12px 18px;
-      border: none;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-      font-weight: 700;
-      cursor: pointer;
-      color: #0b1220;
+      line-height: 1.5;
     }
 
     .app {
-      max-width: 920px;
+      max-width: 900px;
       margin: auto;
-      padding: 40px 20px;
+      padding: 30px 20px 80px;
     }
 
     .card {
@@ -64,26 +53,22 @@
       padding: 12px;
       background: #0f172a;
       color: white;
+      resize: vertical;
     }
 
-    button.main {
+    button {
       background: linear-gradient(135deg, #38bdf8, #0ea5e9);
       border: none;
       padding: 12px 18px;
       border-radius: 12px;
       font-weight: 800;
       cursor: pointer;
-      margin-top: 10px;
       color: #0b1220;
-      transition: 0.2s;
+      margin-top: 10px;
     }
 
-    button.main:hover {
+    button:hover {
       transform: translateY(-1px);
-    }
-
-    .results {
-      margin-top: 20px;
     }
 
     .result-card {
@@ -91,7 +76,7 @@
       border: 1px solid rgba(148, 163, 184, 0.15);
       border-radius: 16px;
       padding: 16px;
-      margin-bottom: 12px;
+      margin-top: 12px;
     }
 
     .bar-bg {
@@ -109,34 +94,17 @@
       background: linear-gradient(90deg, #38bdf8, #0ea5e9);
       transition: width 0.5s ease;
     }
-    .result-card {
-  animation: fadeIn 0.4s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
   </style>
 </head>
 
 <body>
 
   <div class="hero">
-    <h1>🤖 AI Evaluation Studio</h1>
-    <p>Compare AI-generated responses using structured scoring for relevance, clarity, and structure.</p>
-    <button class="cta" onclick="document.getElementById('app').scrollIntoView({behavior:'smooth'})">
-      Start Evaluating
-    </button>
+    <h1>🤖 AI Response Review Studio</h1>
+    <p>Compare two AI responses using scoring for relevance, clarity, and structure.</p>
   </div>
 
-  <div class="app" id="app">
+  <div class="app">
 
     <div class="card">
       <h3>Prompt</h3>
@@ -153,92 +121,78 @@
       <textarea id="responseB"></textarea>
     </div>
 
-    <button class="main" onclick="evaluate()">Run Evaluation</button>
+    <button onclick="evaluate()">Run Evaluation</button>
 
-    <div class="results">
+    <div class="result-card">
+      <h3>Winner</h3>
+      <p id="winner">—</p>
+    </div>
 
-      <div class="result-card">
-        <h3>Winner</h3>
-        <p id="winner">—</p>
-      </div>
+    <div class="result-card">
+      <h3>Summary</h3>
+      <p id="summary">—</p>
+    </div>
 
-      <div class="result-card">
-        <h3>Analysis</h3>
-        <p id="summary">—</p>
-      </div>
+    <div class="result-card">
+      <h3>Response A</h3>
+      <div class="bar-bg"><div class="bar-fill" id="barA"></div></div>
+    </div>
 
-      <div class="result-card">
-        <h3>Response A Score</h3>
-        <div class="bar-bg"><div class="bar-fill" id="barA"></div></div>
-      </div>
-
-      <div class="result-card">
-        <h3>Response B Score</h3>
-        <div class="bar-bg"><div class="bar-fill" id="barB"></div></div>
-      </div>
-
+    <div class="result-card">
+      <h3>Response B</h3>
+      <div class="bar-bg"><div class="bar-fill" id="barB"></div></div>
     </div>
 
   </div>
 
   <script>
     function score(text, prompt) {
-  const words = text.trim().split(/\s+/).filter(Boolean);
-  const length = Math.min(words.length / 2, 10);
+      const words = text.trim().split(/\s+/).filter(Boolean);
+      const length = Math.min(words.length / 2, 10);
 
-  const pWords = prompt.toLowerCase().split(/\s+/);
-  const t = text.toLowerCase();
+      const pWords = prompt.toLowerCase().split(/\s+/);
+      const t = text.toLowerCase();
 
-  let match = 0;
-  pWords.forEach(w => {
-    if (w.length > 3 && t.includes(w)) match++;
-  });
+      let match = 0;
+      pWords.forEach(w => {
+        if (w.length > 3 && t.includes(w)) match++;
+      });
 
-  const relevance = Math.min(match * 2, 10);
+      const relevance = Math.min(match * 2, 10);
 
-  const structure =
-    text.includes(".") ||
-    text.includes(",") ||
-    text.includes("-")
-      ? 7
-      : 4;
+      const structure =
+        text.includes(".") ||
+        text.includes(",") ||
+        text.includes("-")
+          ? 7
+          : 4;
 
-  return (length * 0.3) + (relevance * 0.4) + (structure * 0.3);
-}
+      return (length * 0.3) + (relevance * 0.4) + (structure * 0.3);
+    }
 
-function setBar(id, value) {
-  document.getElementById(id).style.width = (value / 10) * 100 + "%";
-}
+    function setBar(id, value) {
+      document.getElementById(id).style.width = (value / 10) * 100 + "%";
+    }
 
-function evaluate() {
-  const btn = document.querySelector("button.main");
+    function evaluate() {
+      const prompt = document.getElementById("prompt").value || "";
+      const a = document.getElementById("responseA").value || "";
+      const b = document.getElementById("responseB").value || "";
 
-  btn.disabled = true;
-  btn.innerText = "Evaluating...";
+      const A = score(a, prompt);
+      const B = score(b, prompt);
 
-  setTimeout(() => {
-    const prompt = document.getElementById("prompt").value || "";
-    const a = document.getElementById("responseA").value || "";
-    const b = document.getElementById("responseB").value || "";
+      document.getElementById("winner").innerText =
+        A > B ? "Response A Wins 🥇"
+        : B > A ? "Response B Wins 🥇"
+        : "Tie 🤝";
 
-    const A = score(a, prompt);
-    const B = score(b, prompt);
+      document.getElementById("summary").innerText =
+        "Evaluation based on relevance, clarity, and structure.";
 
-    document.getElementById("winner").innerText =
-      A > B ? "Response A Wins 🥇"
-      : B > A ? "Response B Wins 🥇"
-      : "Tie 🤝";
-
-    document.getElementById("summary").innerText =
-      "Evaluation based on relevance, clarity, and structure scoring.";
-
-    setBar("barA", A);
-    setBar("barB", B);
-
-    btn.disabled = false;
-    btn.innerText = "Run Evaluation";
-  }, 600);
-}
+      setBar("barA", A);
+      setBar("barB", B);
+    }
   </script>
 
 </body>
