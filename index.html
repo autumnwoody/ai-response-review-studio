@@ -127,7 +127,7 @@
       height: 10px;
       width: 0%;
       background: linear-gradient(90deg, #38bdf8, #0ea5e9);
-      transition: width 0.5s ease;
+      transition: width 0.6s ease;
     }
 
     .score-text {
@@ -135,17 +135,6 @@
       color: #94a3b8;
       margin-top: 6px;
       line-height: 1.4;
-    }
-
-    .label {
-      font-size: 12px;
-      color: #94a3b8;
-      margin-bottom: 6px;
-    }
-
-    .value {
-      font-size: 16px;
-      font-weight: 600;
     }
   </style>
 </head>
@@ -167,15 +156,15 @@
   <div class="features">
     <div class="feature">
       <h3>Multi-Metric Scoring</h3>
-      <p>Evaluates relevance, clarity, and structure.</p>
+      <p>Relevance, clarity, and structure evaluation system.</p>
     </div>
     <div class="feature">
       <h3>Side-by-Side Comparison</h3>
       <p>Compare two AI responses instantly.</p>
     </div>
     <div class="feature">
-      <h3>Visual Score Dashboard</h3>
-      <p>Progress bars and structured evaluation output.</p>
+      <h3>Visual Dashboard</h3>
+      <p>Score bars + structured evaluation output.</p>
     </div>
   </div>
 
@@ -202,23 +191,23 @@
     <div class="results">
 
       <div class="result-card">
-        <div class="label">Winner</div>
-        <div class="value" id="winner">—</div>
+        <h3>Winner</h3>
+        <p id="winner">—</p>
       </div>
 
       <div class="result-card">
-        <div class="label">Analysis</div>
-        <div class="value" id="summary">—</div>
+        <h3>Analysis</h3>
+        <p id="summary">—</p>
       </div>
 
       <div class="result-card">
-        <div class="label">Response A Score Breakdown</div>
+        <h3>Response A Score</h3>
         <div class="bar-bg"><div class="bar-fill" id="barA"></div></div>
         <div class="score-text" id="scoreA">—</div>
       </div>
 
       <div class="result-card">
-        <div class="label">Response B Score Breakdown</div>
+        <h3>Response B Score</h3>
         <div class="bar-bg"><div class="bar-fill" id="barB"></div></div>
         <div class="score-text" id="scoreB">—</div>
       </div>
@@ -244,7 +233,10 @@
       const relevanceScore = Math.min(match * 2, 10);
 
       const structure =
-        text.includes(".") || text.includes(",") || text.includes("-") || text.includes("•")
+        text.includes(".") ||
+        text.includes(",") ||
+        text.includes("-") ||
+        text.includes("•")
           ? 7
           : 4;
 
