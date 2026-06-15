@@ -40,6 +40,8 @@
       font-weight: 700;
       cursor: pointer;
       color: #0b1220;
+      font-size: 15px;
+      transition: transform 0.15s;
     }
 
     .app {
@@ -58,6 +60,7 @@
 
     textarea {
       width: 100%;
+      box-sizing: border-box;
       height: 120px;
       border-radius: 12px;
       border: 1px solid rgba(148, 163, 184, 0.2);
@@ -65,27 +68,32 @@
       background: #0f172a;
       color: white;
       resize: vertical;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #38bdf8;
     }
 
     button.main {
       background: linear-gradient(135deg, #38bdf8, #0ea5e9);
       border: none;
-      padding: 12px 18px;
+      padding: 12px 28px;
       border-radius: 12px;
       font-weight: 800;
       cursor: pointer;
       margin-top: 10px;
       color: #0b1220;
+      font-size: 15px;
+      transition: transform 0.15s, opacity 0.15s;
     }
 
-    button.main:hover,
-    .cta:hover {
-      transform: translateY(-1px);
-    }
+    button.main:hover, .cta:hover { transform: translateY(-1px); }
+    button.main:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    .results {
-      margin-top: 20px;
-    }
+    .results { margin-top: 20px; }
 
     .result-card {
       background: rgba(17, 24, 39, 0.85);
@@ -95,57 +103,122 @@
       margin-bottom: 12px;
     }
 
+    .result-card h3 { margin: 0 0 8px; color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    #winner {
+      font-size: 20px;
+      font-weight: 700;
+      color: #38bdf8;
+      margin: 0;
+    }
+
+    #summary {
+      color: #cbd5e1;
+      line-height: 1.6;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    .score-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .score-label { font-size: 13px; color: #94a3b8; min-width: 90px; }
+
     .bar-bg {
-      width: 100%;
+      flex: 1;
       height: 10px;
       background: #1f2937;
       border-radius: 999px;
       overflow: hidden;
-      margin-top: 6px;
     }
 
     .bar-fill {
       height: 10px;
       width: 0%;
       background: linear-gradient(90deg, #38bdf8, #0ea5e9);
-      transition: width 0.5s ease;
+      transition: width 0.6s ease;
+      border-radius: 999px;
     }
+
+    .score-num { font-size: 13px; color: #e5e7eb; min-width: 36px; text-align: right; }
+
+    .loading {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      color: #94a3b8;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .loading.visible { display: flex; }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid #1f2937;
+      border-top-color: #38bdf8;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      display: none;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: #fca5a5;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .error-msg.visible { display: block; }
   </style>
 </head>
 
 <body>
 
-  <!-- HERO -->
   <div class="hero">
     <h1>🤖 AI Evaluation Studio</h1>
-    <p>Compare AI-generated responses using simple scoring for relevance, clarity, and structure.</p>
-
+    <p>Compare two AI responses using Claude as the judge — scored on relevance, clarity, and structure.</p>
     <button class="cta" onclick="document.getElementById('app').scrollIntoView({behavior:'smooth'})">
       Start Evaluating
     </button>
   </div>
 
-  <!-- APP -->
   <div class="app" id="app">
 
     <div class="card">
       <h3>Prompt</h3>
-      <textarea id="prompt"></textarea>
+      <textarea id="prompt" placeholder="Enter the original prompt that was given to the AI..."></textarea>
     </div>
 
     <div class="card">
       <h3>Response A</h3>
-      <textarea id="responseA"></textarea>
+      <textarea id="responseA" placeholder="Paste the first AI response here..."></textarea>
     </div>
 
     <div class="card">
       <h3>Response B</h3>
-      <textarea id="responseB"></textarea>
+      <textarea id="responseB" placeholder="Paste the second AI response here..."></textarea>
     </div>
 
-    <button class="main" onclick="evaluate()">Run Evaluation</button>
+    <button class="main" id="evalBtn" onclick="evaluate()">Run Evaluation</button>
 
-    <div class="results">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      Claude is analyzing both responses…
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="results" id="results" style="display:none">
 
       <div class="result-card">
         <h3>Winner</h3>
@@ -159,65 +232,122 @@
 
       <div class="result-card">
         <h3>Response A Score</h3>
-        <div class="bar-bg"><div class="bar-fill" id="barA"></div></div>
+        <div class="score-row">
+          <span class="score-label">Overall</span>
+          <div class="bar-bg"><div class="bar-fill" id="barA"></div></div>
+          <span class="score-num" id="scoreANum">—</span>
+        </div>
       </div>
 
       <div class="result-card">
         <h3>Response B Score</h3>
-        <div class="bar-bg"><div class="bar-fill" id="barB"></div></div>
+        <div class="score-row">
+          <span class="score-label">Overall</span>
+          <div class="bar-bg"><div class="bar-fill" id="barB"></div></div>
+          <span class="score-num" id="scoreBNum">—</span>
+        </div>
       </div>
 
     </div>
-
   </div>
 
   <script>
-    function score(text, prompt) {
-      const words = text.trim().split(/\s+/).filter(Boolean);
-      const length = Math.min(words.length / 2, 10);
-
-      const pWords = prompt.toLowerCase().split(/\s+/);
-      const t = text.toLowerCase();
-
-      let match = 0;
-      pWords.forEach(w => {
-        if (w.length > 3 && t.includes(w)) match++;
-      });
-
-      const relevance = Math.min(match * 2, 10);
-
-      const structure =
-        text.includes(".") ||
-        text.includes(",") ||
-        text.includes("-")
-          ? 7
-          : 4;
-
-      return (length * 0.3) + (relevance * 0.4) + (structure * 0.3);
+    function setBar(barId, numId, score) {
+      document.getElementById(barId).style.width = (score * 10) + "%";
+      document.getElementById(numId).textContent = score.toFixed(1) + "/10";
     }
 
-    function setBar(id, value) {
-      document.getElementById(id).style.width = (value / 10) * 100 + "%";
+    function showError(msg) {
+      const el = document.getElementById("errorMsg");
+      el.textContent = msg;
+      el.classList.add("visible");
     }
 
-    function evaluate() {
-      const prompt = document.getElementById("prompt").value || "";
-      const a = document.getElementById("responseA").value || "";
-      const b = document.getElementById("responseB").value || "";
+    function clearError() {
+      document.getElementById("errorMsg").classList.remove("visible");
+    }
 
-      const A = score(a, prompt);
-      const B = score(b, prompt);
+    async function evaluate() {
+      const prompt    = document.getElementById("prompt").value.trim();
+      const responseA = document.getElementById("responseA").value.trim();
+      const responseB = document.getElementById("responseB").value.trim();
 
-      document.getElementById("winner").innerText =
-        A > B ? "Response A Wins 🥇"
-        : B > A ? "Response B Wins 🥇"
-        : "Tie 🤝";
+      clearError();
 
-      document.getElementById("summary").innerText =
-        "Evaluation based on relevance, clarity, and structure.";
+      if (!prompt || !responseA || !responseB) {
+        showError("Please fill in the Prompt, Response A, and Response B before running.");
+        return;
+      }
 
-      setBar("barA", A);
-      setBar("barB", B);
+      // UI: loading state
+      const btn = document.getElementById("evalBtn");
+      btn.disabled = true;
+      document.getElementById("loading").classList.add("visible");
+      document.getElementById("results").style.display = "none";
+
+      const systemPrompt = `You are an expert AI response evaluator. Given a prompt and two responses (A and B), score each on a scale of 1–10 and pick a winner.
+
+Respond ONLY with valid JSON in this exact format, no extra text:
+{
+  "scoreA": <number 1-10>,
+  "scoreB": <number 1-10>,
+  "winner": "A" | "B" | "Tie",
+  "analysis": "<2-3 sentence explanation of your reasoning>"
+}`;
+
+      const userMessage = `Prompt:
+${prompt}
+
+Response A:
+${responseA}
+
+Response B:
+${responseB}`;
+
+      try {
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-6",
+            max_tokens: 1000,
+            system: systemPrompt,
+            messages: [{ role: "user", content: userMessage }]
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+          throw new Error(data.error.message || "API error");
+        }
+
+        const raw = data.content.map(b => b.text || "").join("").trim();
+        const clean = raw.replace(/```json|```/g, "").trim();
+        const result = JSON.parse(clean);
+
+        // Populate results
+        const winnerEl = document.getElementById("winner");
+        if (result.winner === "A") winnerEl.textContent = "Response A Wins 🥇";
+        else if (result.winner === "B") winnerEl.textContent = "Response B Wins 🥇";
+        else winnerEl.textContent = "It's a Tie 🤝";
+
+        document.getElementById("summary").textContent = result.analysis;
+
+        document.getElementById("results").style.display = "block";
+
+        // Animate bars after display
+        setTimeout(() => {
+          setBar("barA", "scoreANum", result.scoreA);
+          setBar("barB", "scoreBNum", result.scoreB);
+        }, 50);
+
+      } catch (err) {
+        showError("Something went wrong: " + err.message);
+      } finally {
+        btn.disabled = false;
+        document.getElementById("loading").classList.remove("visible");
+      }
     }
   </script>
 
